@@ -1,6 +1,6 @@
 import re
 
-from xodb import Schema, Text, String, Array, Integer
+from xodb import Schema, Text, String, Array, Integer, Nilsimsa
 
 
 class Page(object):
@@ -9,6 +9,7 @@ class Page(object):
         self.title = ''
         self.text = ''
         self.entities = []
+        self.nilsimsa = ''
 
 link_re = re.compile(r'\[\[(?:[^|\]]*\|)?([^\]]+)\]\]')
 cat_re = re.compile(r'\[\[Category:(?:[^|\]]*\|)?([^\]]+)\]\]')
@@ -32,16 +33,14 @@ class PageSchema(Schema):
                        prefix=True,
                        string=True,
                        string_prefix='name')
+
     text = Text.using(prefix=False)
     category = Array.of(String.using(optional=True)).using(optional=True,
                                                            facet=True,
                                                            getter=_cats)
-    entities = Array.of(
-        Text.using(optional=True,
-                   prefix=True,
-                   string=True,
-                   string_prefix='entity')
-        ).using(optional=True)
+    entity = Array.of(String).using(optional=True,
+                                    prefix=True)
 
     size = Integer.using(sortable=True,
                          getter=_size)
+    nilsimsa = Nilsimsa.using(from_field='text')
