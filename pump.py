@@ -6,7 +6,7 @@ from cPickle import dumps
 
 ctx = zmq.Context()
 source = ctx.socket(zmq.PUSH)
-source.setsockopt(zmq.HWM, 1000)
+source.setsockopt(zmq.HWM, 10000)
 source.bind('ipc://source.ipc')
 
 from schemas import Page
