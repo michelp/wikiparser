@@ -13,7 +13,7 @@ from schemas import Page
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 10
 
 def wikit():
     with bz2.BZ2File('enwiki-latest-pages-articles.xml.bz2') as f:
