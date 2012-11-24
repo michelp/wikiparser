@@ -8,7 +8,8 @@ class Page(object):
     def __init__(self):
         self.title = ''
         self.text = ''
-        self.entities = []
+        self.entity = []
+        self.link = []
         self.nilsimsa = ''
 
 link_re = re.compile(r'\[\[(?:[^|\]]*\|)?([^\]]+)\]\]')
@@ -35,12 +36,24 @@ class PageSchema(Schema):
                        string_prefix='name')
 
     text = Text.using(prefix=False)
-    category = Array.of(String.using(optional=True)).using(optional=True,
-                                                           facet=True,
-                                                           getter=_cats)
-    entity = Array.of(String).using(optional=True,
-                                    prefix=True)
+
+    category = Array.of(
+        String.using(optional=True)
+        ).using(optional=True,
+                facet=True,
+                getter=_cats)
+
+    entities = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='entity',
+                   )).using(optional=True, prefix=False)
+
+    link = Array.of(String).using(optional=True,
+                                  prefix=True)
 
     size = Integer.using(sortable=True,
                          getter=_size)
-    nilsimsa = Nilsimsa.using(from_field='text')
+
+    nilsimsa = String.using(optional=True, sortable=True)
