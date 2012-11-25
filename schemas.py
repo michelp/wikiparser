@@ -8,7 +8,9 @@ class Page(object):
     def __init__(self):
         self.title = ''
         self.text = ''
-        self.entity = []
+        self.people = []
+        self.orgs = []
+        self.locations = []
         self.link = []
         self.nilsimsa = ''
 
@@ -43,12 +45,27 @@ class PageSchema(Schema):
                 facet=True,
                 getter=_cats)
 
-    entities = Array.of(
+    people = Array.of(
         Text.using(optional=True,
                    prefix=True,
                    string=True,
-                   string_prefix='entity',
+                   string_prefix='person',
                    )).using(optional=True, prefix=False)
+
+    orgs = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='org',
+                   )).using(optional=True, prefix=False)
+
+    locations = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='location',
+                   )).using(optional=True, prefix=False)
+
 
     link = Array.of(String).using(optional=True,
                                   prefix=True)

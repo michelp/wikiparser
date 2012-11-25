@@ -34,13 +34,14 @@ def wikit():
             if event == 'end':
                 if element.tag.endswith('page'):
                     if current.text and current.title and not redirect:
-                        try:
-                            batch.append(current)
-                            if len(batch) > BATCH_SIZE:
-                                source.send(dumps(batch))
-                                batch = []
-                        except Exception:
-                            log.exception('wtf')
+                        if not current.title.startswith(('Template:', 'Category:', 'File:')):
+                            try:
+                                batch.append(current)
+                                if len(batch) > BATCH_SIZE:
+                                    source.send(dumps(batch))
+                                    batch = []
+                            except Exception:
+                                log.exception('wtf')
                     element.clear()
 
 

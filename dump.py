@@ -11,7 +11,7 @@ atexit.register(db.flush)
 
 ctx = zmq.Context()
 sink = ctx.socket(zmq.PULL)
-sink.setsockopt(zmq.HWM, 10)
+sink.setsockopt(zmq.HWM, 1000)
 sink.bind('tcp://10.100.0.40:9123')
 
 while True:
