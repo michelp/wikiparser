@@ -42,7 +42,7 @@ def read_source():
     sink.setsockopt(zmq.HWM, 10)
     sink.connect('tcp://10.100.0.40:9123')
 
-    geonames = xodb.open('names', writable=False)
+    geonames = xodb.open('names2', writable=False)
     namecache = LRUDict(limit=10000)
     
     while True:
@@ -90,7 +90,7 @@ def read_source():
             o.entities = [e[1] for e in ents]
             o.entities2 = ents2
             o.entities3 = ents3
-            print o.people, o.locations, o.orgs
+            print o.locations
             results.append(o)
         sink.send(dumps(results))
 
