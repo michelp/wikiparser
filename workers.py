@@ -13,6 +13,11 @@ zeroth = itemgetter(0)
 
 nodes =  set(['LOCATION', 'ORGANIZATION', 'PERSON'])
 
+
+def chunk(text):
+    return batch_ne_chunk(
+        imap(pos_tag, imap(word_tokenize, sent_tokenize(text))))
+
 def extract_entity_names(t):
     if getattr(t, 'node', None):
         if t.node in nodes:
@@ -25,9 +30,7 @@ def extract_entity_names(t):
 
 def entities_from(text):
     ents = []
-    for t in batch_ne_chunk(imap(pos_tag, 
-                                    imap(word_tokenize, sent_tokenize(text))),
-                               ):
+    for t in chunk(text):
         ents.extend(extract_entity_names(t))
     return ents
 
@@ -57,29 +60,36 @@ def read_source():
             people = []
             locations = []
             orgs = []
+            ents2 = []
+            ents3 = []
             for t, e in ents:
+                sc = e.count(' ')
+                if sc == 1:
+                    ents2.append(e)
+                if sc == 2:
+                    ents3.append(e)
                 if t == 'PERSON':
                     if namecache.get(e) is not None:
                         locations.append(e)
                     elif geonames.count('name:%s' % e):
                         locations.append(e)
                         namecache[e] = True
-                    else:
-                        people.append(e)
+                    people.append(e)
                 if t == 'LOCATION':
                     if namecache.get(e) is not None:
                         locations.append(e)
                     elif geonames.count('name:%s' % e):
                         locations.append(e)
                         namecache[e] = True
-                    else:
-                        locations.append(e)
                 if t == 'ORGANIZATION':
                     orgs.append(e)
 
             o.people = people
             o.locations = locations
             o.orgs = orgs
+            o.entities = [e[1] for e in ents]
+            o.entities2 = ents2
+            o.entities3 = ents3
             print o.people, o.locations, o.orgs
             results.append(o)
         sink.send(dumps(results))

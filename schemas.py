@@ -66,9 +66,31 @@ class PageSchema(Schema):
                    string_prefix='location',
                    )).using(optional=True, prefix=False)
 
+    entities = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='entity',
+                   )).using(optional=True, prefix=False)
+
+    entities2 = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='entity2',
+                   )).using(optional=True, prefix=False)
+
+    entities3 = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='entity3',
+                   )).using(optional=True, prefix=False)
+
 
     link = Array.of(String).using(optional=True,
-                                  prefix=True)
+                                  prefix=True,
+                                  getter=_links)
 
     size = Integer.using(sortable=True,
                          getter=_size)

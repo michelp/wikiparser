@@ -4,7 +4,7 @@ import xodb
 import schemas
 from cPickle import loads
 
-db = xodb.open('test_et2', writable=True)
+db = xodb.open('test_et4', writable=True)
 db.map(schemas.Page, schemas.PageSchema)
 
 atexit.register(db.flush)
