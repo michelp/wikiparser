@@ -18,4 +18,7 @@ while True:
     batch = loads(sink.recv())
     for o in batch:
         print o.title
-        db.add(o)
+        try:
+            db.add(o)
+        except Exception:
+            print 'oops'

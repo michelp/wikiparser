@@ -16,7 +16,8 @@ nodes =  set(['LOCATION', 'ORGANIZATION', 'PERSON'])
 
 def chunk(text):
     return batch_ne_chunk(
-        imap(pos_tag, imap(word_tokenize, sent_tokenize(text))))
+        imap(pos_tag, imap(word_tokenize, sent_tokenize(text))),
+        binary=True)
 
 def extract_entity_names(t):
     if getattr(t, 'node', None):
@@ -42,9 +43,6 @@ def read_source():
     sink.setsockopt(zmq.HWM, 10)
     sink.connect('tcp://10.100.0.40:9123')
 
-    geonames = xodb.open('names2', writable=False)
-    namecache = LRUDict(limit=10000)
-    
     while True:
         batch = loads(queue.get())
         results = []
@@ -57,9 +55,6 @@ def read_source():
                 o.nilsimsa = nilsimsa.Nilsimsa([val]).hexdigest()
                 ents = entities_from(val)
 
-            people = []
-            locations = []
-            orgs = []
             ents2 = []
             ents3 = []
             for t, e in ents:
@@ -68,25 +63,7 @@ def read_source():
                     ents2.append(e)
                 if sc == 2:
                     ents3.append(e)
-                if t == 'PERSON':
-                    if namecache.get(e) is not None:
-                        locations.append(e)
-                    elif geonames.count('name:%s' % e):
-                        locations.append(e)
-                        namecache[e] = True
-                    people.append(e)
-                if t == 'LOCATION':
-                    if namecache.get(e) is not None:
-                        locations.append(e)
-                    elif geonames.count('name:%s' % e):
-                        locations.append(e)
-                        namecache[e] = True
-                if t == 'ORGANIZATION':
-                    orgs.append(e)
 
-            o.people = people
-            o.locations = locations
-            o.orgs = orgs
             o.entities = [e[1] for e in ents]
             o.entities2 = ents2
             o.entities3 = ents3
