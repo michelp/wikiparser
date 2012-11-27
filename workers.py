@@ -11,7 +11,7 @@ import page
 
 zeroth = itemgetter(0)
 
-nodes =  set(['LOCATION', 'ORGANIZATION', 'PERSON'])
+nodes =  set(['NE', 'LOCATION', 'ORGANIZATION', 'PERSON'])
 
 
 def chunk(text, binary=True):
@@ -50,25 +50,30 @@ def read_source():
             val = (o.text
                    .encode('translit/long')
                    .encode('ascii', 'ignore'))
-            print o.title
             if val:
                 val = page.page(val)
                 o.nilsimsa = nilsimsa.Nilsimsa([val]).hexdigest()
                 ents = entities_from(val)
+                print ents
 
+            ents0 = []
+            ents1 = []
             ents2 = []
             ents3 = []
             for t, e in ents:
                 sc = e.count(' ')
+                ents0.append(e)
+                if sc == 0:
+                    ents1.append(e)
                 if sc == 1:
                     ents2.append(e)
                 if sc == 2:
                     ents3.append(e)
 
-            o.entities = [e[1] for e in ents]
+            o.entities = ents0
+            o.entities1 = ents1
             o.entities2 = ents2
             o.entities3 = ents3
-            print o.locations
             results.append(o)
         sink.send(dumps(results))
 

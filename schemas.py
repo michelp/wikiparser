@@ -49,32 +49,18 @@ class PageSchema(Schema):
                 facet=True,
                 getter=_cats)
 
-    people = Array.of(
-        Text.using(optional=True,
-                   prefix=True,
-                   string=True,
-                   string_prefix='person',
-                   )).using(optional=True, prefix=False)
-
-    orgs = Array.of(
-        Text.using(optional=True,
-                   prefix=True,
-                   string=True,
-                   string_prefix='org',
-                   )).using(optional=True, prefix=False)
-
-    locations = Array.of(
-        Text.using(optional=True,
-                   prefix=True,
-                   string=True,
-                   string_prefix='location',
-                   )).using(optional=True, prefix=False)
-
     entities = Array.of(
         Text.using(optional=True,
                    prefix=True,
                    string=True,
                    string_prefix='entity',
+                   )).using(optional=True, prefix=False)
+
+    entities1 = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='entity1',
                    )).using(optional=True, prefix=False)
 
     entities2 = Array.of(
