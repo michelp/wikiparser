@@ -7,17 +7,17 @@ from itertools import imap, ifilterfalse
 import nilsimsa
 import xodb
 from xodb.tools import LRUDict
-
+import page
 
 zeroth = itemgetter(0)
 
 nodes =  set(['LOCATION', 'ORGANIZATION', 'PERSON'])
 
 
-def chunk(text):
+def chunk(text, binary=True):
     return batch_ne_chunk(
         imap(pos_tag, imap(word_tokenize, sent_tokenize(text))),
-        binary=True)
+        binary=binary)
 
 def extract_entity_names(t):
     if getattr(t, 'node', None):
@@ -52,6 +52,7 @@ def read_source():
                    .encode('ascii', 'ignore'))
             print o.title
             if val:
+                val = page.page(val)
                 o.nilsimsa = nilsimsa.Nilsimsa([val]).hexdigest()
                 ents = entities_from(val)
 
