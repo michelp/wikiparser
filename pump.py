@@ -7,7 +7,7 @@ from cPickle import dumps
 ctx = zmq.Context()
 source = ctx.socket(zmq.PUSH)
 source.setsockopt(zmq.HWM, 100)
-source.bind('tcp://10.100.0.40:9124')
+source.bind('tcp://10.100.0.41:9124')
 
 from schemas import Page
 

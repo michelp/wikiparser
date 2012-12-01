@@ -41,7 +41,7 @@ def read_source():
     worker_ctx = zmq.Context()
     sink = worker_ctx.socket(zmq.PUSH)
     sink.setsockopt(zmq.HWM, 10)
-    sink.connect('tcp://10.100.0.40:9123')
+    sink.connect('tcp://10.100.0.41:9123')
 
     while True:
         batch = loads(queue.get())
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     ctx = zmq.Context()
     source = ctx.socket(zmq.PULL)
     source.setsockopt(zmq.HWM, 10)
-    source.connect('tcp://10.100.0.40:9124')
+    source.connect('tcp://10.100.0.41:9124')
     while True:
         queue.put(source.recv())
 
