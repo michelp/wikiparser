@@ -1,13 +1,16 @@
+import sys
 import zmq
 import bz2
 import logging
+import xodb
+from xodb.database import Record
 from lxml import etree
 from cPickle import dumps
 
 ctx = zmq.Context()
 source = ctx.socket(zmq.PUSH)
-source.setsockopt(zmq.HWM, 100)
-source.bind('tcp://10.100.0.41:9124')
+source.setsockopt(zmq.SNDHWM, 100)
+source.bind('tcp://127.0.0.1:9124')
 
 from schemas import Page
 
@@ -16,6 +19,10 @@ log = logging.getLogger(__name__)
 BATCH_SIZE = 10
 
 def wikit():
+    num = 0
+    if len(sys.argv) > 1:
+        db = xodb.open('test_et4', writable=False)
+        last = db.backend.get_doccount()
     with bz2.BZ2File('enwiki-latest-pages-articles.xml.bz2') as f:
         current = None
         batch = []
@@ -33,8 +40,14 @@ def wikit():
                     redirect = True
             if event == 'end':
                 if element.tag.endswith('page'):
+                    # num += 1
+                    # if num < last:
+                    #     print 'Skipping  ', num, " ", last, " ", current.title
+                    #     element.clear()
+                    #     continue
                     if current.text and current.title and not redirect:
                         if not current.title.startswith(('Template:', 'Category:', 'File:')):
+                            print "Pumping ", current.title
                             try:
                                 batch.append(current)
                                 if len(batch) > BATCH_SIZE:

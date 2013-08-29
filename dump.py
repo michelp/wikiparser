@@ -1,4 +1,5 @@
 import atexit
+import logging
 import zmq
 import xodb
 import schemas
@@ -9,10 +10,14 @@ db.map(schemas.Page, schemas.PageSchema)
 
 atexit.register(db.flush)
 
+logging.basicConfig(level=logging.DEBUG)
+
 ctx = zmq.Context()
 sink = ctx.socket(zmq.PULL)
-sink.setsockopt(zmq.HWM, 1000)
-sink.bind('tcp://10.100.0.41:9123')
+sink.setsockopt(zmq.RCVHWM, 1000)
+sink.bind('tcp://127.0.0.1:9123')
+
+log = logging.getLogger(__name__)
 
 while True:
     batch = loads(sink.recv())
@@ -21,4 +26,5 @@ while True:
         try:
             db.add(o)
         except Exception:
-            print 'oops'
+            log.exception('error')
+            

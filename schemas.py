@@ -1,6 +1,6 @@
 import re
 
-from xodb import Schema, Text, String, Array, Integer, Nilsimsa
+from xodb import Schema, Text, String, Array, Integer, Boolean
 
 
 class Page(object):
@@ -16,7 +16,8 @@ class Page(object):
         self.entities2 = []
         self.entities3 = []
         self.link = []
-        self.nilsimsa = ''
+        self.image = None
+        self.nilsimsa = None
 
 link_re = re.compile(r'\[\[(?:[^|\]]*\|)?([^\]]+)\]\]')
 cat_re = re.compile(r'\[\[Category:(?:[^|\]]*\|)?([^\]]+)\]\]')
@@ -30,6 +31,9 @@ def _cats(schema, obj, element):
 def _size(schema, obj, element):
     return len(obj.text)
 
+def _has_image(schema, obj, element):
+    return obj.image is not None
+
 
 class PageSchema(Schema):
 
@@ -37,9 +41,12 @@ class PageSchema(Schema):
     language = 'en'
 
     title = Text.using(optional=True,
-                       prefix=True,
-                       string=True,
-                       string_prefix='name')
+                       prefix=True)
+
+    name = String.using(optional=True,
+                        prefix=True,
+                        sortable=True,
+                        getter=lambda s, o, e: o.title)
 
     text = Text.using(prefix=False, optional=True)
 
@@ -77,14 +84,40 @@ class PageSchema(Schema):
                    string_prefix='entity3',
                    )).using(optional=True, prefix=False)
 
-    link = Array.of(
-        String.using(optional=True)
+    links = Array.of(
+        Text.using(optional=True,
+                   prefix=True,
+                   string=True,
+                   string_prefix='link')
         ).using(optional=True,
-                prefix=True,
+                prefix=False,
                 getter=_links)
     
-    size = Integer.using(optional=True,
-                         sortable=True,
+    size = Integer.using(sortable=True,
                          getter=_size)
+
+    num_entities = Integer.using(
+        sortable=True,
+        getter=lambda s,o,e: len(o.entities))
+
+    num_entities1 = Integer.using(
+        sortable=True,
+        getter=lambda s,o,e: len(o.entities1))
+
+    num_entities2 = Integer.using(
+        sortable=True,
+        getter=lambda s,o,e: len(o.entities2))
+
+    num_entities3 = Integer.using(
+        sortable=True,
+        getter=lambda s,o,e: len(o.entities3))
+
+    num_links = Integer.using(
+        sortable=True,
+        getter=lambda s,o,e: len(o.link))
+
+    image = String.using(optional=True, sortable=True)
+
+    has_image = Boolean.using(getter=_has_image)
 
     nilsimsa = String.using(optional=True, sortable=True)

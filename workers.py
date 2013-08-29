@@ -1,3 +1,4 @@
+import re
 import zmq
 from nltk import batch_ne_chunk, pos_tag, word_tokenize, sent_tokenize
 from cPickle import loads, dumps
@@ -12,6 +13,8 @@ import page
 zeroth = itemgetter(0)
 
 nodes =  set(['NE', 'LOCATION', 'ORGANIZATION', 'PERSON'])
+
+image_re = re.compile(r'\|\s*image\s*=\s*(.*)$', re.MULTILINE)
 
 
 def chunk(text, binary=True):
@@ -40,13 +43,37 @@ queue = Queue(100)
 def read_source():
     worker_ctx = zmq.Context()
     sink = worker_ctx.socket(zmq.PUSH)
-    sink.setsockopt(zmq.HWM, 10)
-    sink.connect('tcp://10.100.0.41:9123')
+    sink.setsockopt(zmq.SNDHWM, 10)
+    sink.connect('tcp://127.0.0.1:9123')
 
     while True:
         batch = loads(queue.get())
         results = []
         for o in batch:
+            search = image_re.search(o.text)
+            if search is not None:
+                image = search.group(1).strip()
+                if '.jpg' in image:
+                    image = image.split('.jpg')[0] + '.jpg'
+                    if ':' in image:
+                        image = image.split(':')[1]
+                    o.image = image
+                    print image
+                elif '.svg' in image:
+                    image = image.split('.svg')[0] + '.svg'
+                    if ':' in image:
+                        image = image.split(':')[1]
+                    o.image = image
+                    print image
+                elif '.png' in image:
+                    image = image.split('.png')[0] + '.png'
+                    if ':' in image:
+                        image = image.split(':')[1]
+                    o.image = image
+                    print image
+
+            print o.title
+
             val = (o.text
                    .encode('translit/long')
                    .encode('ascii', 'ignore'))
@@ -54,7 +81,6 @@ def read_source():
                 val = page.page(val)
                 o.nilsimsa = nilsimsa.Nilsimsa([val]).hexdigest()
                 ents = entities_from(val)
-                print ents
 
             ents0 = []
             ents1 = []
@@ -78,15 +104,15 @@ def read_source():
         sink.send(dumps(results))
 
 if __name__ == '__main__':
-    pool = [Process(target=read_source) for i in range(24)]
+    pool = [Process(target=read_source) for i in range(8)]
     for p in pool:
         p.daemon = True
         p.start()
 
     ctx = zmq.Context()
     source = ctx.socket(zmq.PULL)
-    source.setsockopt(zmq.HWM, 10)
-    source.connect('tcp://10.100.0.41:9124')
+    source.setsockopt(zmq.RCVHWM, 10)
+    source.connect('tcp://127.0.0.1:9124')
     while True:
         queue.put(source.recv())
 
