@@ -1,5 +1,7 @@
+import os
 import re
 import zmq
+import xapian
 from nltk import batch_ne_chunk, pos_tag, word_tokenize, sent_tokenize
 from cPickle import loads, dumps
 from operator import itemgetter, methodcaller
@@ -7,6 +9,7 @@ from multiprocessing import Process, Queue
 from itertools import imap, ifilterfalse
 import nilsimsa
 import xodb
+import xodb2
 from xodb.tools import LRUDict
 import page
 
@@ -40,12 +43,12 @@ def entities_from(text):
 
 queue = Queue(100)
 
-def read_source():
+def read_source(id):
     worker_ctx = zmq.Context()
     sink = worker_ctx.socket(zmq.PUSH)
     sink.setsockopt(zmq.SNDHWM, 10)
     sink.connect('tcp://127.0.0.1:9123')
-
+    db2 = xodb2.WritableDatabase(os.path.join('db2', str(id)), xapian.DB_CREATE_OR_OVERWRITE)
     while True:
         batch = loads(queue.get())
         results = []
@@ -74,18 +77,17 @@ def read_source():
 
             print o.title
 
-            val = (o.text
-                   .encode('translit/long')
-                   .encode('ascii', 'ignore'))
-            if val:
-                val = page.page(val)
-                o.nilsimsa = nilsimsa.Nilsimsa([val]).hexdigest()
-                ents = entities_from(val)
+            if o.text:
+                o.text = page.page(o.text)
+                o.nilsimsa = nilsimsa.Nilsimsa([o.text.encode('ascii', 'ignore')]).hexdigest()
+                ents = entities_from(o.text)
+                print ents
 
             ents0 = []
             ents1 = []
             ents2 = []
             ents3 = []
+            ents4 = []
             for t, e in ents:
                 sc = e.count(' ')
                 ents0.append(e)
@@ -95,16 +97,32 @@ def read_source():
                     ents2.append(e)
                 if sc == 2:
                     ents3.append(e)
+                if sc == 3:
+                    ents4.append(e)
 
             o.entities = ents0
             o.entities1 = ents1
             o.entities2 = ents2
             o.entities3 = ents3
-            results.append(o)
-        sink.send(dumps(results))
+            o.entities4 = ents4
+            d = xodb2.Document()
+            d.name = xodb2.Term(o.title, slot=0)
+            d.title = xodb2.Text(o.title)
+            d.text = xodb2.Text(o.text, prefix='')
+            d.entity = xodb2.List(o.entities, store=True)
+            d.entity2 = xodb2.List(o.entities2)
+            d.entity3 = xodb2.List(o.entities3)
+            d.entity4 = xodb2.List(o.entities4)
+            d.entities = xodb2.List(o.entities, text=True)
+            d.entities2 = xodb2.List(o.entities2, text=True)
+            d.entities3 = xodb2.List(o.entities3, text=True)
+            d.entities4 = xodb2.List(o.entities4, text=True)
+            d.nilsimsa = xodb2.Term(o.nilsimsa, slot=1, store=False)
+            db2.add(d)
+        # sink.send(dumps(results))
 
 if __name__ == '__main__':
-    pool = [Process(target=read_source) for i in range(8)]
+    pool = [Process(target=read_source, args=(i,)) for i in range(8)]
     for p in pool:
         p.daemon = True
         p.start()
